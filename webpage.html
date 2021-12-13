@@ -1,0 +1,179 @@
+<html>
+<head>
+  <title>INRABT</title>
+  <meta name="viewport" content="width=device-width, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
+</head>
+<body>
+  <fieldset id="parent">
+    <legend>INRABT</legend>
+    <fieldset>
+      <legend>WEBRADIO CONTROLS</legend>
+      <button id="volp" type="button">Volume +</button>
+      <button id="volm" type="button">Volume -</button>
+      <hr/>
+      <button id="stp" type="button">Station +</button>
+      <button id="stm" type="button">Station -</button>
+    </fieldset>
+    <fieldset>
+      <legend>MODE</legend>
+      <button id="mbt" type="button">Bluetooth</button>
+      </fieldset>
+      <fieldset>
+      <legend>CHANNELS</legend>
+      <div>
+        <ol id="chm"></ol>
+        <button type="button" id="addCh">Add</button> | 
+        <button type="button" id="cmpCh">Compile</button>
+      </div>
+      <br>
+      <textarea id="chls" cols="50" rows="25" placeholder='[{"id": 1, "name": "Sample Station", "url": "http://someurl"}]'></textarea>
+      <br>
+      <button id="uchls" type="button">Update</button>
+    </fieldset>
+  </fieldset>
+</body>
+<script type="text/javascript">
+let chm = document.getElementById('chm');
+function gets(url)
+{
+  let p = document.getElementById('parent');
+  p.disabled = true;
+  fetch(url).then(res => res.text()).then(d => {p.disabled = false;});
+}
+document.getElementById('uchls').addEventListener('click', () => {
+  let value = document.getElementById('chls').value.trim();
+  if(!value){alert('INVALID VALUE');
+    return;
+  }
+  try
+  {
+    JSON.parse(value);
+  }
+  catch (e)
+  {
+    alert('INVALID VALUE FORMAT');
+    return false;
+  }
+  fetch('/uchls',{method: 'POST', body: value})
+  .then(res => res.text())
+  .then(d => {
+    if(d == 'OK')
+    {
+      alert('OK');
+    }
+    else
+    {
+      alert('ERROR');
+    }
+  });
+  });
+  document.getElementById('mbt').addEventListener('click', () => {gets('/mbt');
+  });
+  document.getElementById('volp').addEventListener('click', () => {gets('/volp');
+  });
+  document.getElementById('volm').addEventListener('click', () => {gets('/volm');
+  });
+  document.getElementById('stp').addEventListener('click', () => {gets('/stp');
+  });
+  document.getElementById('stm').addEventListener('click', () => {gets('/stm');
+  });
+  document.addEventListener("DOMContentLoaded", () => {
+    prepareChm();
+  });
+
+  document.getElementById('addCh').addEventListener('click', () => {
+    addCh();
+  });
+  document.getElementById('cmpCh').addEventListener('click', () => {
+    cmpCh();
+  });
+
+
+  function cmpCh()
+  {
+    let lists = chm.getElementsByTagName('li');
+    let index = 1;
+    let stations = [];
+    for(let list of lists)
+    {
+      let name = list.getElementsByClassName('name')[0].value.trim();
+      let url = list.getElementsByClassName('url')[0].value.trim();
+      if(!!name && !!url)
+      {
+        stations.push({
+          id: index,
+          name: name,
+          url: url
+        });
+      }
+      index++;
+    }
+    document.getElementById('chls').value = JSON.stringify(stations);
+  }
+  
+  function addCh()
+  {
+    let li = document.createElement('li');
+    let nameHolder = document.createElement('input');
+    nameHolder.placeholder = 'Name';
+    nameHolder.classList.add('name');
+    nameHolder.type = 'text';
+    li.appendChild(nameHolder);
+    let urlHolder = document.createElement('input');
+    urlHolder.placeholder = 'URL';
+    urlHolder.classList.add('url');
+    urlHolder.type = 'text';
+    li.appendChild(urlHolder);
+    let removeBtn = document.createElement('button');
+    removeBtn.type = 'button';
+    removeBtn.innerText = 'Remove';
+    removeBtn.onclick = (e) => {
+      e.target.parentElement.remove();
+    }
+    li.appendChild(removeBtn);
+    chm.appendChild(li);
+  }
+  function prepareChm()
+  {
+    let value = document.getElementById('chls').value.trim();
+    if(!value)
+    {
+      alert('INVALID VALUE');
+      return;
+    }
+    try
+    {
+      value = JSON.parse(value);
+    }
+    catch (e)
+    {
+      alert('INVALID VALUE FORMAT');
+      return false;
+    }
+    for(let ch of value)
+    {
+      let li = document.createElement('li');
+      let nameHolder = document.createElement('input');
+      nameHolder.placeholder = 'Name';
+      nameHolder.classList.add('name');
+      nameHolder.type = 'text';
+      nameHolder.value = ch.name;
+      li.appendChild(nameHolder);
+      let urlHolder = document.createElement('input');
+      urlHolder.placeholder = 'URL';
+      urlHolder.classList.add('url');
+      urlHolder.type = 'text';
+      urlHolder.value = ch.url;
+      li.appendChild(urlHolder);
+      let removeBtn = document.createElement('button');
+      removeBtn.type = 'button';
+      removeBtn.innerText = 'Remove';
+      removeBtn.onclick = (e) => {
+        e.target.parentElement.remove();
+      }
+      li.appendChild(removeBtn);
+      chm.appendChild(li);
+    }
+  }
+</script>
+</html>
